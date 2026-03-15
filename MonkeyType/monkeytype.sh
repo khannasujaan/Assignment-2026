@@ -1,5 +1,7 @@
 #!/bin/bash
 RANDOM=$$
+RED='\e[31m'
+GREEN='\e[32m'
 
 min(){
     if [ $1 -le $2 ]; then
@@ -13,12 +15,9 @@ while true; do
 
     x=$(($RANDOM%20+1))
     sentence="$(head -n $x sentences.txt | tail -n 1)"
-    echo $sentence
+    echo -e -n "$sentence\r"
     len=${#sentence}
-
-    read -p "Press Enter to start"
     startTime=$(date +%s%N)
-    echo "Time STARTED"
     typedInput=""
     currentPos=0
     keysPressed=0
@@ -29,6 +28,8 @@ while true; do
         if [[ $(($(date +%s%N) - $startTime)) -ge 60000000000 ]]; then
             break
         fi
+        charSentence=${sentence:pointer:1}
+        # echo $charSentence
         now=$(date +%s%N)
         elapsed=$(( (now - startTime) / 1000000000 ))
         timeLeft=$(( 60 - elapsed ))
@@ -38,7 +39,7 @@ while true; do
         elif [[ $charInput == $'\x7f' && $currentPos -ge 2 ]]; then
             ((currentPos-=2))
             typedInput="${typedInput%?}"
-            echo -e -n "\b \b"
+            echo -e -n "\b${sentence:currentPos+1:1}\b"
         else
             typedInput+=$charInput
             if [[ $charInput == $' ' ]]; then
