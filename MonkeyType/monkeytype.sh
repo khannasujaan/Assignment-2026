@@ -1,8 +1,11 @@
 #!/bin/bash
 RANDOM=$$
-RED='\e[31m'
-GREEN='\e[32m'
-
+RED='\033[31m'
+REDBACKGROUND="\033[41m"
+WHITEBACKGROUND="\033[48;2;255;255;255m"
+GREEN='\033[32m'
+GREY="\033[37m"
+RESETCOLOR="\033[0m"
 min(){
     if [ $1 -le $2 ]; then
         echo $1
@@ -15,10 +18,12 @@ while true; do
 
     x=$(($RANDOM%20+1))
     sentence="$(head -n $x sentences.txt | tail -n 1)"
-    echo -e -n "$sentence\r"
     len=${#sentence}
-    startTime=$(date +%s%N)
+    started=0
+    read -p "Press Enter to Start"
+    echo -e -n "$GREY$sentence$RESETCOLOR\r"
     typedInput=""
+    startTime=$(date +%s%N)
     currentPos=0
     keysPressed=0
     green=0
@@ -36,39 +41,53 @@ while true; do
         IFS= read -n 1 -s -r -t "$timeLeft" charInput
         if [[ $charInput == $'' ]]; then 
             break
-        elif [[ $charInput == $'\x7f' && $currentPos -ge 2 ]]; then
+        elif [[ $charInput == $'\x7f' && $currentPos -ge 1 ]]; then
             ((currentPos-=2))
             typedInput="${typedInput%?}"
-            echo -e -n "\b${sentence:currentPos+1:1}\b"
+            echo -e -n "\b$WHITEBACKGROUND$GREY${sentence:currentPos+1:1}$RESETCOLOR$WHITEBACKGROUND\b"
         else
             typedInput+=$charInput
+            # echo "${sentence:currentPos:1}"
             if [[ $charInput == $' ' ]]; then
-                echo -n " "
+                if [[ "${sentence:currentPos:1}" == "${charInput}" ]]; then
+                    ((green++))
+                    echo -n " "
+                else 
+                    ((red++))
+                    echo -e -n "$REDBACKGROUND $WHITEBACKGROUND"
+                fi  
+            elif [[ "${sentence:currentPos:1}" == "${charInput}" ]]; then 
+                echo -e -n $GREEN
+                ((green++))
             else
-                echo -n $charInput
+                echo -e -n $RED
+                ((red++))
             fi
+            echo -n $charInput
+            ((keysPressed+=1))
         fi
         ((currentPos+=1))
-        ((keysPressed+=1))
     done
-    echo
+    echo -e $RESETCOLOR
         
     endTime=$(date +%s%N)
     totalTime=$(echo "($endTime - $startTime)/1000000000" | bc)
     typedLength=${#typedInput}
     n=$(min $len $typedLength)
 
-    correctChar=0
-    wrongChar=0
-    for (( i=0; i<$n; i++ ));
-    do 
-        if [ "${sentence:$i:1}" == "${typedInput:$i:1}" ]; then
-            ((correctChar++))
-        else 
-            ((wrongChar++))
-        fi
-    done
-    accuracy=$(echo "scale=4; $correctChar*100 / $len" | bc)
+    # correctChar=0
+    # wrongChar=0
+    # for (( i=0; i<$n; i++ ));
+    # do 
+    #     if [ "${sentence:$i:1}" == "${typedInput:$i:1}" ]; then
+    #         ((correctChar++))
+    #     else 
+    #         ((wrongChar++))
+    #     fi
+    # done
+    echo "green = $green"
+    echo "keysPressed = $keysPressed"
+    accuracy=$(echo "scale=4; $green*100 / $keysPressed" | bc)
 
     echo "Accuracy: $accuracy"
     spaceSegment=0
@@ -82,7 +101,7 @@ while true; do
             done
         fi
     done
-    WPM=$(echo "scale=2; $correctChar*12/$totalTime" | bc)
+    WPM=$(echo "scale=2; $green*12/$totalTime" | bc)
     echo "WPM: $WPM"
     echo
     echo "Do you want to repeat the speedtest (y/n):- "
