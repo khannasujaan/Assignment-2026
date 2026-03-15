@@ -14,11 +14,10 @@ while true; do
     x=$(($RANDOM%20+1))
     sentence="$(head -n $x sentences.txt | tail -n 1)"
     echo $sentence
-    echo "Press Enter to start"
 
-    read temp
+    read -p "Press Enter to start"
     startTime=$(date +%s%N)
-    read typedInput
+    read -t 60 typedInput
     endTime=$(date +%s%N)
     totalTime=$(echo "($endTime - $startTime)/1000000000" | bc)
     len=${#sentence}
@@ -49,7 +48,7 @@ while true; do
             done
         fi
     done
-    WPM=$(echo "scale=4; ($spaceSegment+1)*60/$totalTime" | bc)
+    WPM=$(echo "scale=2; $correctChar*12/$totalTime" | bc)
     echo "WPM: $WPM"
     echo
     echo "Do you want to repeat the speedtest (y/n):- "
