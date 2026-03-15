@@ -54,7 +54,15 @@ while true; do
         elif [[ $charInput == $'\x7f' && $currentPos -ge 1 ]]; then
             ((currentPos-=2))
             typedInput="${typedInput%?}"
-            echo -e -n "\b${WHITEBACKGROUND}${GREY}${sentence:currentPos+1:1}${RESETCOLOR}\b"
+            # echo $currentPos
+            # echo $len
+            if [[ $len -gt $currentPos+1 ]]; then
+                echo -e -n "\b${WHITEBACKGROUND}${GREY}${sentence:currentPos+1:1}${RESETCOLOR}\b"
+                # echo "inside"
+            else
+                # echo "outside"
+                echo -e -n "\b${WHITEBACKGROUND} \b"
+            fi
         else
             typedInput+=$charInput
             if [[ $charInput == $' ' ]]; then
