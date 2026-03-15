@@ -13,14 +13,23 @@ min(){
         echo $2
     fi
 }
+read -p "Enter the difficulty level (1/2/3):- " difficulty
 
 while true; do
 
     x=$(($RANDOM%20+1))
-    sentence="$(head -n $x sentences.txt | tail -n 1)"
+    
+    if [[ $difficulty -eq 1 ]]; then 
+        sentence="$(head -n $x easy.txt | tail -n 1)"
+    elif [[ $difficulty -eq 2 ]]; then 
+        sentence="$(head -n $x medium.txt | tail -n 1)"
+    else
+        sentence="$(head -n $x hard.txt | tail -n 1)"
+    fi
     len=${#sentence}
     started=0
-    read -p "Press Enter to Start"
+    read -p "Press Enter to Start "
+    echo -e "$sentence"
     echo -e -n "$GREY$sentence$RESETCOLOR\r"
     typedInput=""
     startTime=$(date +%s%N)
@@ -34,7 +43,6 @@ while true; do
             break
         fi
         charSentence=${sentence:pointer:1}
-        # echo $charSentence
         now=$(date +%s%N)
         elapsed=$(( (now - startTime) / 1000000000 ))
         timeLeft=$(( 60 - elapsed ))
@@ -47,7 +55,6 @@ while true; do
             echo -e -n "\b$WHITEBACKGROUND$GREY${sentence:currentPos+1:1}$RESETCOLOR$WHITEBACKGROUND\b"
         else
             typedInput+=$charInput
-            # echo "${sentence:currentPos:1}"
             if [[ $charInput == $' ' ]]; then
                 if [[ "${sentence:currentPos:1}" == "${charInput}" ]]; then
                     ((green++))
@@ -74,17 +81,6 @@ while true; do
     totalTime=$(echo "($endTime - $startTime)/1000000000" | bc)
     typedLength=${#typedInput}
     n=$(min $len $typedLength)
-
-    # correctChar=0
-    # wrongChar=0
-    # for (( i=0; i<$n; i++ ));
-    # do 
-    #     if [ "${sentence:$i:1}" == "${typedInput:$i:1}" ]; then
-    #         ((correctChar++))
-    #     else 
-    #         ((wrongChar++))
-    #     fi
-    # done
     echo "green = $green"
     echo "keysPressed = $keysPressed"
     accuracy=$(echo "scale=4; $green*100 / $keysPressed" | bc)
