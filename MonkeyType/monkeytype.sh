@@ -17,10 +17,16 @@ min(){
     fi
 }
 
-cols=$(tput cols)
 difficulty=$1
 
 while true; do
+
+    width=$(tput cols)
+    paddingAmount=$(( (width - 72) / 2 ))
+    printf -v padding "%${paddingAmount}s" ""
+
+    echo -e "\n$padding                       _              _                    \n$padding _ __ ___   ___  _ __ | | _____ _   _| |_ _   _ _ __   ___ \n$padding| '_ \` _ \ / _ \| '_ \| |/ / _ \ | | | __| | | | '_ \ / _ \ \n$padding| | | | | | (_) | | | |   <  __/ |_| | |_| |_| | |_) |  __/\n$padding|_| |_| |_|\___/|_| |_|_|\_\___|\__, |\__|\__, | .__/ \___|  bash version\n$padding                                |___/     |___/|_|           - Ryu"
+
 
     x=$(($RANDOM%20+1))
     
@@ -33,9 +39,9 @@ while true; do
     fi
     len=${#sentence}
     started=0
+    tput cup 11 0
     read -p "Press Enter to Start "
-    echo -e "$sentence"
-    echo -e -n "${GREY}$sentence${RESETCOLOR}\r"   # colour the sentences grey
+    echo -e -n "${GREY}$sentence${RESETCOLOR}\r"
     typedInput=""
     startTime=$(date +%s%N)
     currentPos=0
@@ -43,6 +49,10 @@ while true; do
     green=0
     red=0
     pointer=0
+    temp=1
+    spacePressedIndexBeforeWord=()
+    indexAfterSpacePressed=()
+    shiftedArray=()
     while true; do
         charSentence=${sentence:pointer:1}
         now=$(date +%s%N)
@@ -52,41 +62,87 @@ while true; do
         if [[ $charInput == $'' ]]; then 
             break
         elif [[ $charInput == $'\x7f' && $currentPos -ge 1 ]]; then
-            ((currentPos-=2))
             typedInput="${typedInput%?}"
-            # echo $currentPos
-            # echo $len
-            if [[ $len -gt $currentPos+1 ]]; then
-                echo -e -n "\b${WHITEBACKGROUND}${GREY}${sentence:currentPos+1:1}${RESETCOLOR}\b"
-                # echo "inside"
+            if [[ ${#indexAfterSpacePressed[@]} -ge 1 && $pointer -eq ${indexAfterSpacePressed[$((${#indexAfterSpacePressed[@]}-1))]} ]]; then
+                temp=$currentPos
+                currentPos=${spacePressedIndexBeforeWord[$((${#spacePressedIndexBeforeWord[@]}-1))]}
+                pointer=$(($pointer-$temp+$currentPos))
+                tput cup 12 $pointer
+                unset 'indexAfterSpacePressed[${#indexAfterSpacePressed[@]}-1]'
+                unset 'spacePressedIndexBeforeWord[${#spacePressedIndexBeforeWord[@]}-1]'
+            elif [[ ${#shiftedArray[@]} -ge 1 && $pointer -eq ${shiftedArray[$((${#shiftedArray[@]}-1))]} ]]; then
+                ((pointer--))
+                tput cup 12 $pointer
+                for (( i=$currentPos; i<$len; i++ )); do
+                    echo -n -e "${GREY}${sentence:i:1}${RESETCOLOR}"
+                done
+                tput cup 12 $pointer
+                unset 'shiftedArray[${#shiftedArray[@]}-1]'
             else
-                # echo "outside"
-                echo -e -n "\b${WHITEBACKGROUND} \b"
+                ((pointer--))
+                ((currentPos--))
+                tput cup 12 $pointer
+                for (( i=$currentPos; i<$len; i++ )); do
+                    echo -n -e "${GREY}${sentence:i:1}${RESETCOLOR}"
+                done
+                tput cup 12 $pointer
+
             fi
+
         else
             typedInput+=$charInput
             if [[ $charInput == $' ' ]]; then
                 if [[ "${sentence:currentPos:1}" == "${charInput}" ]]; then
                     ((green++))
                     echo -n " "
+                    ((pointer++))
+                    ((currentPos++))
                 else 
                     ((red++))
                     echo -e -n "$REDBACKGROUND $WHITEBACKGROUND"
+                    spacePressedIndexBeforeWord+=($pointer)
+                    for (( i=currentPos; i<len; i++ )); do
+                        if [[ "${sentence:i:1}" == " " ]]; then
+                            ((currentPos++))
+                            ((pointer++))
+                            tput cup 12 $pointer
+                            break
+                        fi
+                        ((currentPos++))
+                        ((pointer++))
+                    done
+                    indexAfterSpacePressed+=($pointer)
+
+
                 fi  
             elif [[ "${sentence:currentPos:1}" == "${charInput}" ]]; then 
-                echo -e -n $GREEN
+                echo -e -n "$GREEN$charInput"
                 ((green++))
+                ((pointer++))
+                ((currentPos++))
             else
-                echo -e -n $RED
-                ((red++))
+                if [[ "${sentence:currentPos:1}" == " " ]]; then
+                    echo -e -n "$RED$charInput"
+                    ((red++))
+                    ((pointer++))
+                    for (( i=$currentPos; i<$len; i++ )); do
+                        echo -n -e "${GREY}${sentence:i:1}${RESETCOLOR}"
+                    done
+                    shiftedArray+=($pointer)
+                    tput cup 12 $pointer
+                else
+                    echo -e -n "$RED$charInput"
+                    ((red++))
+                    ((pointer++))
+                    ((currentPos++))
+                fi
+                
+                    
             fi
-            echo -n $charInput
             ((keysPressed+=1))
         fi
-        ((currentPos+=1))
     done
     echo -e $RESETCOLOR
-    echo 
     endTime=$(date +%s%N)
     totalTime=$(echo "($endTime - $startTime)/1000000000" | bc)
     typedLength=${#typedInput}
@@ -115,6 +171,7 @@ while true; do
     read -p "Do you want to repeat the speedtest (y/n):- " d
     echo
     echo
+    clear
     if [[ $d != "y" ]]; then
         ./interface.sh
         break
