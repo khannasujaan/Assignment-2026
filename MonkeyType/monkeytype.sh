@@ -28,7 +28,7 @@ while true; do
     echo -e "\n$padding                       _              _                    \n$padding _ __ ___   ___  _ __ | | _____ _   _| |_ _   _ _ __   ___ \n$padding| '_ \` _ \ / _ \| '_ \| |/ / _ \ | | | __| | | | '_ \ / _ \ \n$padding| | | | | | (_) | | | |   <  __/ |_| | |_| |_| | |_) |  __/\n$padding|_| |_| |_|\___/|_| |_|_|\_\___|\__, |\__|\__, | .__/ \___|  bash version\n$padding                                |___/     |___/|_|           - Ryu"
 
 
-    x=$(($RANDOM%20+1))
+    x=$(($RANDOM%50+1))
     
     if [[ $difficulty -eq 1 ]]; then 
         sentence="$(head -n $x easy.txt | tail -n 1)"
@@ -38,7 +38,6 @@ while true; do
         sentence="$(head -n $x hard.txt | tail -n 1)"
     fi
     len=${#sentence}
-    started=0
     tput cup 11 0
     read -p "Press Enter to Start "
     echo -e -n "${GREY}$sentence${RESETCOLOR}\r"
@@ -54,7 +53,6 @@ while true; do
     indexAfterSpacePressed=()
     shiftedArray=()
     while true; do
-        charSentence=${sentence:pointer:1}
         now=$(date +%s%N)
         elapsed=$(( (now - startTime) / 1000000000 ))
         timeLeft=$(( 60 - elapsed ))
@@ -76,6 +74,7 @@ while true; do
                 for (( i=$currentPos; i<$len; i++ )); do
                     echo -n -e "${GREY}${sentence:i:1}${RESETCOLOR}"
                 done
+                tput el
                 tput cup 12 $pointer
                 unset 'shiftedArray[${#shiftedArray[@]}-1]'
             else
@@ -85,6 +84,7 @@ while true; do
                 for (( i=$currentPos; i<$len; i++ )); do
                     echo -n -e "${GREY}${sentence:i:1}${RESETCOLOR}"
                 done
+                tput el
                 tput cup 12 $pointer
 
             fi
@@ -101,7 +101,7 @@ while true; do
                     continue
                 else
                     ((red++))
-                    echo -e -n "$REDBACKGROUND $WHITEBACKGROUND"
+                    echo -e -n "$REDBACKGROUND $RESETCOLOR"
                     spacePressedIndexBeforeWord+=($pointer)
                     for (( i=currentPos; i<len; i++ )); do
                         if [[ "${sentence:i:1}" == " " ]]; then
