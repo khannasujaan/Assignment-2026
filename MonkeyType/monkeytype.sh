@@ -97,7 +97,9 @@ while true; do
                     echo -n " "
                     ((pointer++))
                     ((currentPos++))
-                else 
+                elif [[ "${sentence:currentPos-1:1}" == "${charInput}" ]]; then
+                    continue
+                else
                     ((red++))
                     echo -e -n "$REDBACKGROUND $WHITEBACKGROUND"
                     spacePressedIndexBeforeWord+=($pointer)

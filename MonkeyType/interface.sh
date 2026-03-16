@@ -61,8 +61,10 @@ while true; do
         tput cup 10 $((($width - 10)/2))
         echo -e "CREDITS - ryu"
         tput cup 11 $((($width - 35)/2))
-        echo -e "TIME GIVEN - easily more than 15 hours"
-        tput cup 12 $((($width - 55)/2))
+        echo -e "TIME GIVEN - easily more than 24 hours"
+        tput cup 12 $((($width - 37)/2))
+        echo -e "TIME SLEPT - barely 2 hours today (16 mar)"
+        tput cup 13 $((($width - 55)/2))
         echo -e "had to miss chaardiwari due to monkeytype :,( sad days"
         break
     fi
